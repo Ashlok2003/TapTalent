@@ -1,4 +1,4 @@
-.PHONY: dev build test lint clean db:generate db:push deploy
+.PHONY: dev build test lint clean db-generate db-push deploy
 
 dev:
 	npm run dev
@@ -16,10 +16,10 @@ test:
 lint:
 	npm run lint
 
-db:generate:
+db-generate:
 	npm run db:generate
 
-db:push:
+db-push:
 	npm run db:push
 
 clean:
