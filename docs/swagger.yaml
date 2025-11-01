@@ -8,9 +8,11 @@ info:
     Sources include Ambito, Dolarhoy, and Cronista.
   contact:
     name: API Support
-    email: your@email.com
+    email: chaudharyashlok@gmail.com
 
 servers:
+  - url: https://taptalent.onrender.com
+    description: Production server
   - url: http://localhost:3000
     description: Local development server
 
