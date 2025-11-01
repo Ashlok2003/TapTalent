@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.env
+*.db  # SQLite files
+prisma/migrations/  # If using migrations
+
+/src/generated/prisma
