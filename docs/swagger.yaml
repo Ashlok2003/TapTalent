@@ -1,0 +1,177 @@
+openapi: 3.0.0
+info:
+  title: USD to ARS Currency API
+  version: 1.0.0
+  description: |
+    API for fetching USD/ARS quotes (Dolar Blue), averages, and slippage from multiple sources.
+    Data is refreshed within 60 seconds via Puppeteer scraping and in-memory caching.
+    Sources include Ambito, Dolarhoy, and Cronista.
+  contact:
+    name: API Support
+    email: your@email.com
+
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+
+components:
+  schemas:
+    Quote:
+      type: object
+      required: [buy_price, sell_price, source]
+      properties:
+        buy_price:
+          type: number
+          example: 1425
+          description: Buy price in ARS (compra)
+        sell_price:
+          type: number
+          example: 1445
+          description: Sell price in ARS (venta)
+        source:
+          type: string
+          example: https://www.dolarhoy.com
+        timestamp:
+          type: string
+          format: date-time
+          example: 2025-11-01T12:00:00Z
+
+    Average:
+      type: object
+      required: [average_buy_price, average_sell_price]
+      properties:
+        average_buy_price:
+          type: number
+          example: 1423.33
+        average_sell_price:
+          type: number
+          example: 1443.67
+        timestamp:
+          type: string
+          format: date-time
+          example: 2025-11-01T12:00:00Z
+
+    Slippage:
+      type: object
+      required: [buy_price_slippage, sell_price_slippage, source]
+      properties:
+        buy_price_slippage:
+          type: number
+          example: 0.04
+          description: Percentage slippage for buy (positive = above average)
+        sell_price_slippage:
+          type: number
+          example: -0.06
+          description: Percentage slippage for sell (negative = below average)
+        source:
+          type: string
+          example: https://www.dolarhoy.com
+
+  responses:
+    NoQuotes:
+      description: No quotes available (sources down)
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: No quotes; all sources unavailable.
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      description: Returns API health and timestamp.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: OK
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: 2025-11-01T12:00:00Z
+
+  /quotes:
+    get:
+      summary: Retrieve USD/ARS quotes from all sources
+      description: Returns fresh array of quotes (≤60s cache).
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Quote"
+        "503":
+          $ref: "#/components/responses/NoQuotes"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Failed to fetch quotes
+
+  /average:
+    get:
+      summary: Average buy/sell prices across sources
+      description: Computes averages based on latest quotes.
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Average"
+        "503":
+          $ref: "#/components/responses/NoQuotes"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Failed to calculate average
+
+  /slippage:
+    get:
+      summary: Percentage slippage between each source and average
+      description: Returns slippage per source relative to computed average.
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Slippage"
+        "503":
+          $ref: "#/components/responses/NoQuotes"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Failed to calculate slippage
